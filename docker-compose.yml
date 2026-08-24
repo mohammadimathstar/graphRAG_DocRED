@@ -1,0 +1,60 @@
+version: '3.8' # docker vesion (it is ignored)
+
+
+services:
+  # 1. PostgreSQL Database with pgvector
+  postgres: 
+    image: pgvector/pgvector:pg16 
+    container_name: graphrag_postgres 
+    restart: unless-stopped 
+    environment: 
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "${DB_PORT:-5432}:5432" 
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. pgAdmin (Web UI for Postgres)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: graphrag_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on: #Tells Docker to start the postgres service before starting pgadmin
+      postgres:
+        condition: service_healthy
+
+  # 3. FastAPI Application
+  # api:
+  #   build: .
+  #   container_name: fastapi_app
+  #   ports:
+  #     - "${FASTAPI_PORT:-8000}:8000"
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - .:/app
+  #     - /app/.venv
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+    # Override the default CMD to enable hot-reloading during development
+    # # command: uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:
+  
+  pgadmin_data:

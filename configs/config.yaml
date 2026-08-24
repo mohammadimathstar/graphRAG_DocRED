@@ -1,0 +1,19 @@
+
+
+data:
+  raw_path: 'data/raw/docred'
+  processed_path: 'data/processed/docred'
+
+
+llm:
+  model: 'gpt-5.6-luna'
+
+
+extraction:
+  file_name: 'train.jsonl'
+  num_docs: 2
+  instruction_version: 'prompt-v1'
+
+
+retrieval:
+  instruction_version: 'query-prompt-v1'
