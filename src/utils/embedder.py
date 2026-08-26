@@ -7,7 +7,8 @@ from .llm_schemas import Entity, Triple, ExtractionDocument
 
 # We use nomic-embed-text because it handles 450+ words easily (8192 token limit)
 model = SentenceTransformer("nomic-ai/nomic-embed-text-v1.5", trust_remote_code=True)
-
+# For docker version
+# model = SentenceTransformer('/app/local_model') 
 
 def build_entity_embedding_text(entity: Entity) -> str:
         # canonical_mention: str, entity_type: str, aliases: list, description: str = None) -> str:

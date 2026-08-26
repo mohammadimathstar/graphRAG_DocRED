@@ -21,7 +21,15 @@ Context:
 {context}
 """
 
-with open('configs/config.yaml', 'r') as f:
+import os
+# Get the directory where this script (rags.py) lives
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Go up two levels (from src/rag/ to the project root)
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..', '..'))
+# Build the absolute path to the config file
+CONFIG_PATH = os.path.join(PROJECT_ROOT, 'configs', 'config.yaml')
+
+with open(CONFIG_PATH, 'r') as f:
     config = yaml.safe_load(f)
 
 

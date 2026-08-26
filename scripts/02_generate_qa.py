@@ -1,20 +1,14 @@
 from openai import OpenAI
 from dotenv import load_dotenv
 import yaml
-
-# from src.evaluation.generate_eval_set import generate_questions_for_document
-
 from src.utils.io import read_jsonl
+from src.utils.identifiers import generate_run_name, get_runid
 
 from src.extraction.extractor import OpenAIProvider
 
-from src.utils.identifiers import generate_run_name, get_runid
 from src.db.connection import get_connection
-# from src.db.manager import init_db
-# from src.db.ingest import insert_qa_pair
 
-from src.evaluation.prompt import SYSTEM_PROMPT, USER_PROMPT
-from src.utils.llm_schemas import QuestionList
+from src.evaluation.prompt import SYSTEM_PROMPT
 from src.evaluation.generate_QA import generate_QAs
 
 

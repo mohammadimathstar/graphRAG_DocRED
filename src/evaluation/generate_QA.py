@@ -22,7 +22,8 @@ def generate_questions_for_document(
     for i, triple_str in enumerate(doc['triples']):
         # triple_str format is "canonical_name1:relation_type:canonical_name2"
         parts = triple_str.split(':', 2)
-        if len(parts) < 3: continue
+        if len(parts) < 3: 
+            continue
         head, rel, tail = parts[0], parts[1], parts[2]
         
         triples_prompt_list.append(
@@ -59,7 +60,8 @@ Return a JSON object containing a list of questions, where each question specifi
         idx = gen_q.triple_index
         if idx < len(doc['triples']):
             parts = doc['triples'][idx].split(':', 2)
-            if len(parts) < 3: continue
+            if len(parts) < 3: 
+                continue
             head, rel, tail = parts[0], parts[1], parts[2]
             
             eval_dataset.append({
