@@ -10,8 +10,8 @@ from pydantic import BaseModel
 # Provider abstraction
 # ---------------------------------------------------------------------------
 
-class LLMProvider(ABC):
 
+class LLMProvider(ABC):
     @abstractmethod
     def generate(
         self,
@@ -34,8 +34,8 @@ class LLMProvider(ABC):
 # OpenAI provider
 # ---------------------------------------------------------------------------
 
-class OpenAIProvider(LLMProvider):
 
+class OpenAIProvider(LLMProvider):
     def __init__(self, client: OpenAI):
         self.client = client
 
@@ -46,14 +46,11 @@ class OpenAIProvider(LLMProvider):
         messages: list[dict[str, str]],
         schema: type[BaseModel],
     ) -> tuple[Any, str | None]:
-
-        
         response = self.client.beta.chat.completions.parse(
             model=model,
             messages=messages,
             response_format=schema,
         )
-        
 
         return response, None
 
@@ -62,8 +59,8 @@ class OpenAIProvider(LLMProvider):
 # Ollama provider
 # ---------------------------------------------------------------------------
 
-class OllamaProvider(LLMProvider):
 
+class OllamaProvider(LLMProvider):
     def __init__(self, client: ollama.Client):
         self.client = client
 
@@ -74,7 +71,6 @@ class OllamaProvider(LLMProvider):
         messages: list[dict[str, str]],
         schema: type[BaseModel],
     ) -> tuple[Any, str | None]:
-
         response = self.client.chat(
             model=model,
             messages=messages,
@@ -84,6 +80,10 @@ class OllamaProvider(LLMProvider):
             },
         )
 
-        raw_output = response['message']['content'] if isinstance(response, dict) else response.message.content
+        raw_output = (
+            response["message"]["content"]
+            if isinstance(response, dict)
+            else response.message.content
+        )
 
         return response, raw_output

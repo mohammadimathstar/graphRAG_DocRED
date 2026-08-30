@@ -17,32 +17,33 @@ from src.db.ingest import insert_run
 
 load_dotenv()
 
-with open("configs/config.yaml", 'r') as f:
+with open("configs/config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-def run_extraction():
 
+def run_extraction():
     # ==========================================
     # 1. Loading Parameters
     # ==========================================
-    ndocs_to_process = config['extraction']['num_docs']
-    
+    ndocs_to_process = config["extraction"]["num_docs"]
+
     params = {
-        'model': config['llm']['model'],
-        'run_id': get_runid(),
-        'instruction_version': config['extraction']['instruction_version'],
-        'instruction': SYSTEM_PROMPT,
+        "model": config["llm"]["model"],
+        "run_id": get_runid(),
+        "instruction_version": config["extraction"]["instruction_version"],
+        "instruction": SYSTEM_PROMPT,
     }
 
-    params['run_name'] = generate_run_name(
-        model_name=params['model'], 
-        prompt_version=params['instruction_version']
+    params["run_name"] = generate_run_name(
+        model_name=params["model"], prompt_version=params["instruction_version"]
     )
 
     # ==========================================
     # 2. Initialize extractor
     # ==========================================
-    file_path = f"{config['data']['processed_path']}/{config['extraction']['file_name']}"
+    file_path = (
+        f"{config['data']['processed_path']}/{config['extraction']['file_name']}"
+    )
     docs = read_jsonl(file_path)[:ndocs_to_process]
 
     # ==========================================
@@ -71,17 +72,19 @@ def run_extraction():
     try:
         print(f"Starting batch processing for {len(docs)} documents...")
         success_count = 0
-        
+
         for doc in docs:
             # Process the document atomically
             if process_single_document(conn, doc, extractor):
                 success_count += 1
-                
-        print(f"\nBatch complete! Successfully processed {success_count}/{len(docs)} documents.")
+
+        print(
+            f"\nBatch complete! Successfully processed {success_count}/{len(docs)} documents."
+        )
 
     except Exception as e:
         print(f"Fatal error during batch processing: {e}")
-        
+
     finally:
         # ALWAYS close the connection when the script ends!
         print("Closing database connection.")

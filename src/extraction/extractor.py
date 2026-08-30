@@ -1,4 +1,3 @@
-
 from typing import Any, Generic
 import json
 from pydantic import ValidationError
@@ -7,42 +6,36 @@ from src.utils.structures import Usage, ExtractionResult, ExtractionStatus
 from src.utils.llm_schemas import T
 from src.utils.providers import LLMProvider, OpenAIProvider, OllamaProvider
 from src.utils.token_utils import calculate_openai_usage
-    
+
 
 # ---------------------------------------------------------------------------
 # Information extractor
 # ---------------------------------------------------------------------------
 
+
 class InformationExtractor(Generic[T]):
     """
     It returns strcutred outputs aiming:
-    - to extract structured information from documents. 
+    - to extract structured information from documents.
     - make decision about retrieval strategy (graph or vector)
     """
 
     def __init__(
-        self,
-        provider: LLMProvider,
-        input_template: str,
-        schema: type[T],
-        params: dict
+        self, provider: LLMProvider, input_template: str, schema: type[T], params: dict
     ):
         self.provider = provider
-        self.model = params['model']
-        self.prompt_version = params['instruction_version']
-        self.instruction = params['instruction']
+        self.model = params["model"]
+        self.prompt_version = params["instruction_version"]
+        self.instruction = params["instruction"]
         self.prompt_template = input_template
         self.schema = schema
-        self.run_id = params['run_id']
-        self.run_name = params['run_name']
+        self.run_id = params["run_id"]
+        self.run_name = params["run_name"]
 
     def build_prompt(self, text: str) -> str:
         return self.prompt_template.format(text=text).strip()
 
-    def extract(self, 
-                text: str, 
-                document_id: str | None = None) -> ExtractionResult[T]:
-
+    def extract(self, text: str, document_id: str | None = None) -> ExtractionResult[T]:
         prompt = self.build_prompt(text)
 
         messages = [
@@ -55,22 +48,20 @@ class InformationExtractor(Generic[T]):
                 "content": prompt,
             },
         ]
-        
+
         response, raw_output = self.provider.generate(
             model=self.model,
             messages=messages,
             schema=self.schema,
         )
 
-        
         usage = self.calculate_usage(response)
-        
+
         # ---------------------------------------------------------------
         # OpenAI structured output
         # ---------------------------------------------------------------
 
         if isinstance(self.provider, OpenAIProvider):
-
             output = response.choices[0].message.parsed
 
             if output is not None:
@@ -82,7 +73,7 @@ class InformationExtractor(Generic[T]):
                     usage=usage,
                     model=self.model,
                     run_id=self.run_id,
-                    document_id=document_id,                    
+                    document_id=document_id,
                 )
 
             return ExtractionResult(
@@ -134,8 +125,6 @@ class InformationExtractor(Generic[T]):
             document_id=document_id,
         )
 
-        
-
     def validate_data(
         self,
         data: Any,
@@ -143,7 +132,6 @@ class InformationExtractor(Generic[T]):
         usage: Usage,
         document_id: str | None = None,
     ) -> ExtractionResult[T]:
-
         try:
             output = self.schema.model_validate(data)
 
@@ -169,10 +157,8 @@ class InformationExtractor(Generic[T]):
             run_id=self.run_id,
             document_id=document_id,
         )
-    
 
     def calculate_usage(self, response: Any) -> Usage:
-
         if isinstance(self.provider, OpenAIProvider):
             return self._calculate_openai_usage(response)
 
@@ -181,12 +167,10 @@ class InformationExtractor(Generic[T]):
 
         return Usage()
 
-    def _calculate_openai_usage(self, response: Any) -> Usage:        
+    def _calculate_openai_usage(self, response: Any) -> Usage:
         return calculate_openai_usage(self.model, response)
 
-
     def _calculate_ollama_usage(self, response: Any) -> Usage:
-
         return Usage(
             input_tokens=response.prompt_eval_count or 0,
             output_tokens=response.eval_count or 0,

@@ -1,8 +1,8 @@
-from psycopg import Connection
 from src.utils.structures import Usage
 from typing import Any
 import time
 import yaml
+import os
 
 from src.retrieval.retrieval import retrieve_context
 from src.extraction.extractor import OpenAIProvider, InformationExtractor
@@ -21,40 +21,34 @@ Context:
 {context}
 """
 
-import os
+
 # Get the directory where this script (rags.py) lives
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Go up two levels (from src/rag/ to the project root)
-PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, '..', '..'))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "..", ".."))
 # Build the absolute path to the config file
-CONFIG_PATH = os.path.join(PROJECT_ROOT, 'configs', 'config.yaml')
+CONFIG_PATH = os.path.join(PROJECT_ROOT, "configs", "config.yaml")
 
-with open(CONFIG_PATH, 'r') as f:
+with open(CONFIG_PATH, "r") as f:
     config = yaml.safe_load(f)
 
 
 class RAGBase:
-    def __init__(
-            self, 
-            llm_client,            
-            instructions,
-            model='gpt-5.4-nano'
-        ):
+    def __init__(self, llm_client, instructions, model="gpt-5.4-nano"):
         self.llm_client = llm_client
         self.instructions = instructions
         self.model = model
         self.provider = OpenAIProvider(llm_client)
-        
-        self._init_router()
 
+        self._init_router()
 
     def _init_router(self):
         params_to_track = {
-            'model': self.model,
-            'run_id': None,
-            'run_name': None,
-            'instruction_version': config['retrieval']['instruction_version'],
-            'instruction': ROUTER_PROMPT,
+            "model": self.model,
+            "run_id": None,
+            "run_name": None,
+            "instruction_version": config["retrieval"]["instruction_version"],
+            "instruction": ROUTER_PROMPT,
         }
 
         input_template = """
@@ -76,59 +70,48 @@ class RAGBase:
         finally:
             # ALWAYS return the connection to the pool
             release_conn(conn)
-    
 
     def build_context(self, search_results: list):
         return "\n\n".join(search_results)
-        
 
     def build_prompt(self, question: str, search_results: list[str]) -> str:
-        
-        context = self.build_context(search_results)        
-        prompt = USER_PROMPT_TEMPLATE.format(
-            question=question, 
-            context=context
-        )        
+        context = self.build_context(search_results)
+        prompt = USER_PROMPT_TEMPLATE.format(question=question, context=context)
         return prompt.strip()
-    
-    def _calculate_openai_usage(self, response: Any) -> Usage:        
+
+    def _calculate_openai_usage(self, response: Any) -> Usage:
         return calculate_openai_usage(self.model, response)
-    
 
     def llm(self, prompt):
-
         message_history = [
-            {'role': 'system', 'content': self.instructions}, 
-            {'role': 'user', 'content': prompt}
+            {"role": "system", "content": self.instructions},
+            {"role": "user", "content": prompt},
         ]
-        
+
         response = self.llm_client.responses.create(
-            model=self.model,
-            input=message_history
+            model=self.model, input=message_history
         )
 
         return response
-    
-    def rag(self, query: str, 
-            session_id: str = None):
-        
+
+    def rag(self, query: str, session_id: str = None):
         start_time = time.time()
 
         retrieved_contexts = []
         retrieval_method = "unknown"
         retrieval_usage = Usage()
-        
+
         # 1. Retrieval
         try:
-            print('Retrieval step...')
+            print("Retrieval step...")
             retrieval_result = self.search(query)
 
-            retrieved_contexts = retrieval_result.get('context', [])
-            retrieval_method = retrieval_result.get('strategy', 'unknown')
-            retrieval_usage = retrieval_result.get('usage', Usage())
+            retrieved_contexts = retrieval_result.get("context", [])
+            retrieval_method = retrieval_result.get("strategy", "unknown")
+            retrieval_usage = retrieval_result.get("usage", Usage())
 
         except Exception as e:
-            # Log failure and exit early            
+            # Log failure and exit early
             latency_ms = int((time.time() - start_time) * 1000)
             trace_id = log_production_trace(
                 user_question=query,
@@ -148,16 +131,15 @@ class RAGBase:
 
         # 2. Generation
         try:
-            print('Building prompt...')        
+            print("Building prompt...")
             prompt = self.build_prompt(query, retrieved_contexts)
 
-            print('Generating answer...')
+            print("Generating answer...")
             response = self.llm(prompt)
 
             answer = response.output_text
             generation_usage = self._calculate_openai_usage(response)
         except Exception as e:
-            
             latency_ms = int((time.time() - start_time) * 1000)
             trace_id = log_production_trace(
                 user_question=query,
@@ -189,8 +171,5 @@ class RAGBase:
             status="success",
             session_id=session_id,
         )
-        
-        return {
-            'answer': answer,
-            'trace_id': trace_id
-        }
+
+        return {"answer": answer, "trace_id": trace_id}

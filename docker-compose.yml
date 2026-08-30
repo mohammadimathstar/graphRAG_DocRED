@@ -35,7 +35,25 @@ services:
       postgres:
         condition: service_healthy
 
-  # 3. FastAPI Application
+  # 3. Grafana (Monitoring Dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: graphrag_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Access Grafana at localhost:3000
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+
+  # 4. FastAPI Application
   # api:
   #   build: .
   #   container_name: fastapi_app
@@ -59,3 +77,5 @@ volumes:
   pgdata:
   
   pgadmin_data:
+
+  grafana_data: 

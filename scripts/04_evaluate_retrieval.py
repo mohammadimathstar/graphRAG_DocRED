@@ -14,10 +14,7 @@ from src.evaluation.retrieval_evaluator import get_evaluation_set, evaluate_retr
 from src.retrieval.prompt import ROUTER_PROMPT, USER_TEMPLATE
 
 
-
-
-
-with open("configs/config.yaml", 'r') as f:
+with open("configs/config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 
@@ -26,22 +23,20 @@ def run_evaluate_retrieval():
     # 1. Loading Parameters
     # ==========================================
     params = {
-        'model': config['llm']['model'],
-        'run_id': 'c2095213-4cc7-4000-9655-b72da434e28d',
-        'instruction_version': config['generateQA']['instruction_version'],
-        'instruction': ROUTER_PROMPT,
+        "model": config["llm"]["model"],
+        "run_id": "c2095213-4cc7-4000-9655-b72da434e28d",
+        "instruction_version": config["generateQA"]["instruction_version"],
+        "instruction": ROUTER_PROMPT,
     }
 
-    params['run_name'] = generate_run_name(
-        model_name=params['model'], 
-        prompt_version=params['instruction_version']
-    )    
+    params["run_name"] = generate_run_name(
+        model_name=params["model"], prompt_version=params["instruction_version"]
+    )
 
     # ==========================================
     # 2. Setup DB & Run
     # ==========================================
     conn = get_connection()
-
 
     # ==========================================
     # 3. Initialize extractor
@@ -65,24 +60,17 @@ def run_evaluate_retrieval():
     # 2. Retrieve Context
     # ==========================================
     for qa_pair in tqdm(eval_set):
-        retrieval_metrics = evaluate_retrieval(
-            conn=conn,
-            router=router,
-            qa=qa_pair
-        )
+        retrieval_metrics = evaluate_retrieval(conn=conn, router=router, qa=qa_pair)
 
         insert_rag_evaluation(
             conn=conn,
             metrics=retrieval_metrics,
-            generator_model=params['model'],
-            run_id = params['run_id']
+            generator_model=params["model"],
+            run_id=params["run_id"],
         )
 
         conn.commit()
-    
 
 
 if __name__ == "__main__":
-    
     run_evaluate_retrieval()
-    

@@ -171,8 +171,9 @@ Extract entities and triples from the document above.
 
 Respond with JSON matching the ExtractionDocument schema."""
 
+
 def build_messages(doc_text: str) -> list[dict]:
     return [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",   "content": USER_TEMPLATE.format(text=doc_text)},
+        {"role": "user", "content": USER_TEMPLATE.format(text=doc_text)},
     ]

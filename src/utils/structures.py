@@ -1,5 +1,5 @@
 """
-Domain data models and schemas for knowledge graph extraction processing 
+Domain data models and schemas for knowledge graph extraction processing
 pipelines.
 """
 
@@ -11,6 +11,7 @@ from .llm_schemas import T
 
 
 # --- Low-Level Support Types & Enums ---
+
 
 class ExtractionStatus(str, Enum):
     """The runtime operational status of a single metadata schema extraction task."""
@@ -59,6 +60,7 @@ class Metrics:
 
 # --- Primary Core Entities ---
 
+
 @dataclass
 class Document:
     """Source text entity capturing target content fields, extracted objects, and raw vector representations."""
@@ -72,7 +74,9 @@ class Document:
     document_id: str = field(init=False)
 
     def __post_init__(self) -> None:
-        self.document_id = str(uuid.uuid5(uuid.NAMESPACE_OID, self.title.strip().lower()))
+        self.document_id = str(
+            uuid.uuid5(uuid.NAMESPACE_OID, self.title.strip().lower())
+        )
 
     @classmethod
     def from_dict(cls, data: dict) -> "Document":
@@ -85,6 +89,7 @@ class Document:
 
 
 # --- Vector Embeddings & Processing Outputs ---
+
 
 @dataclass
 class EntityEmbedding:

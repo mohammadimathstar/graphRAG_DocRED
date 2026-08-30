@@ -37,7 +37,6 @@ def init_db(drop_if_exists: bool = False):
         # If ANY table fails to create, roll back the transaction
         conn.rollback()
         print(f"[ERROR] Failed to initialize database: {e}")
-        raise e  
+        raise e
     finally:
         release_conn(conn)
-

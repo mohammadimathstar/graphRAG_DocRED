@@ -1,4 +1,3 @@
-
 SYSTEM_PROMPT = """You are an expert knowledge assistant powered by a GraphRAG system. Your task is to answer the user's question strictly based on the provided retrieved context.
 
 # Context Structure

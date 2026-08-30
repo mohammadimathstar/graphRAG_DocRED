@@ -1,29 +1,29 @@
 #!/bin/bash
 
-if [ -f prefect.yaml ]; then
-    rm prefect.yaml
-fi
+# Download and Preprocess dataset 
+# uv run python scripts/00_ingestion.py
 
-# prefect init
-
-prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api
-
-# Start server in background
-prefect server start --host 0.0.0.0 --port 4200 &
+# Initialize Postgresql DB
+docker compose up -d
 
 sleep 10
 
-# Start worker in background
-prefect worker start -p mypool -t process &
+# Extract KG from documents
+# uv run python scripts/01_extract_kg.py
 
-sleep 5
+# # Generate QA (for evaluating Retrieval)
+# uv run python scripts/02_generate_qa.py
 
-# Run deployment command and automatically answer 'n' to prompt
-echo "n" | prefect deploy monitoring_pipeline.py:monitor_model -n mydeployment -p mypool
+# # Evaluate Retrieval
+# uv run python scripts/04_evaluate_retrieval.py
 
-# Then run the pipeline deployment manually
-prefect deployment run 'monitor-model/mydeployment'
+# Run FastAPI
+uv run uvicorn app:app --reload --port 8000
 
 
-# Keep container alive to keep services running
-tail -f /dev/null
+# # Run deployment command and automatically answer 'n' to prompt
+# echo "n" | prefect deploy monitoring_pipeline.py:monitor_model -n mydeployment -p mypool
+
+
+# # Keep container alive to keep services running
+# tail -f /dev/null
