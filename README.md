@@ -9,7 +9,7 @@ Built entirely with Python, FastAPI, PostgreSQL (+ pgvector), and Docker.
 - **Hybrid Agentic Retrieval:** Routes queries to Graph Traversal (for entity-specific facts) or Vector Search (for thematic summaries) automatically.
 - **Strict Schema Validation:** Uses Pydantic to enforce a closed entity/relation ontology during LLM extraction, preventing hallucinated schemas.
 - **Soft Validation Engine:** Flags invalid triples (e.g., domain/range type mismatches, missing evidence) without crashing the extraction pipeline.
-- **Comprehensive Evaluation Suite:** Evaluates both Information Extraction (Hit@K, MRR against DocRED).
+- **Comprehensive Evaluation Suite:** Evaluates both Information Extraction (P/R/F1 against DocRED)and retrieval performance(Hit@K, MRR against synthetic QA dataset).
 - **Production-Ready API:** FastAPI backend with connection pooling, graceful error handling, and a built-in Web UI for chat and feedback collection.
 - **Fully Containerized:** Docker Compose setup for PostgreSQL, pgAdmin, and Grafana.
 
@@ -91,10 +91,13 @@ docker compose up -d
 ```
 - **pgAdmin** will be available at `http://localhost:5050`
 - **PostgreSQL** will be available at localhost:5433
+
+
 ![pgAdmin](pics/pgadmin.png)
 
 ### Step 3: Install Python Dependencies
 Use `uv` to sync your local virtual environment:
+
 ```bash
 uv sync
 ```
@@ -105,7 +108,7 @@ Before you can ask questions, the Knowledge Graph must be populated. Run the pip
 ```
 uv run python scripts/00_ingestion.py
 ```
-2. Extract Knowledge Graph from raw text (Costs OpenAI API credits)
+2. Extract Knowledge Graph from raw text (Costs OpenAI API credits) and evaluate its performance (P/R/F1) using the ground truth.
 ```
 uv run python scripts/01_extract_kg.py 
 ```
@@ -113,7 +116,7 @@ uv run python scripts/01_extract_kg.py
 ```
 uv run python scripts/02_generate_qa.py
 ```
-4. Evaluate the retrieval step against Ground Truth (Hit@K, MRR)
+4. Evaluate the retrieval step against the generated Q&A dataset (Hit@K, MRR)
 ```
 uv run python scripts/04_evaluate_retrieval.py
 ```
@@ -124,6 +127,8 @@ Start the FastAPI server locally:
 uv run uvicorn app:app --reload --port 8000
 ```
 Chat UI will be available at `http://localhost:8000`
+
+
 ![FastAPI](pics/fastai.png)
 
 
@@ -150,7 +155,7 @@ make run
 
 This project separates **Offline Evaluation** from **Online Inference**.
 
-- **Offline Metrics:** Stored in the `extraction_evals` and `rag_evaluations` tables. Track Extraction F1, Retrieval Hit@K.
+- **Offline Metrics:** Stored in the `extraction_evals` and `rag_evaluations` tables. Track Extraction Precision/Recall/F1, Retrieval Hit@K/MRR.
 - **Online Traces:** Every user interaction in the Web UI is logged to the `production_traces` table, capturing cost, latency, and user feedback (thumbs up/down).
 
 To visualize these metrics, connect Grafana (included in the Docker Compose file) to your PostgreSQL database at `http://localhost:3000`.
