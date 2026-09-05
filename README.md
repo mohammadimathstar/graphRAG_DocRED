@@ -26,8 +26,6 @@ flowchart TD
     G --> H[Final Answer]
 ```
 
-```
-
 ## 📂 Project Structure
 ```
 project_root/
