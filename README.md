@@ -9,13 +9,12 @@ Built entirely with Python, FastAPI, PostgreSQL (+ pgvector), and Docker.
 - **Hybrid Agentic Retrieval:** Routes queries to Graph Traversal (for entity-specific facts) or Vector Search (for thematic summaries) automatically.
 - **Strict Schema Validation:** Uses Pydantic to enforce a closed entity/relation ontology during LLM extraction, preventing hallucinated schemas.
 - **Soft Validation Engine:** Flags invalid triples (e.g., domain/range type mismatches, missing evidence) without crashing the extraction pipeline.
-- **Comprehensive Evaluation Suite:** Evaluates both Information Extraction (P/R/F1 against DocRED) and RAG performance (Hit@K, MRR, RAGAS/Faithfulness).
+- **Comprehensive Evaluation Suite:** Evaluates both Information Extraction (Hit@K, MRR against DocRED).
 - **Production-Ready API:** FastAPI backend with connection pooling, graceful error handling, and a built-in Web UI for chat and feedback collection.
-Fully Containerized: Docker Compose setup for PostgreSQL, pgAdmin, and Grafana.
 - **Fully Containerized:** Docker Compose setup for PostgreSQL, pgAdmin, and Grafana.
 
-##🏗️ System Architecture
-```
+## 🏗️ System Architecture
+```mermaid
 flowchart TD    A[User Query] --> B(LLM Query Router)    B --> C{Strategy?}    C -->|GRAPH| D[Graph Retriever<br/>SQL + pg_trgm]    C -->|VECTOR| E[Vector Retriever<br/>pgvector ANN]    C -->|HYBRID| D    C -->|HYBRID| E    D --> F[Context Fusion]    E --> F    F --> G[Generator LLM]    G --> H[Final Answer]
 ```
 
@@ -90,22 +89,21 @@ uv sync
 
 ### Step 4: Run the Offline Pipeline (Data Ingestion)
 Before you can ask questions, the Knowledge Graph must be populated. Run the pipeline scripts in order:
-
-1. Extract Knowledge Graph from raw text (Costs OpenAI API credits)
+1. Download `DocRED` dataset
 ```
-uv run python scripts/1_extract_kg.py 
+uv run python scripts/00_ingestion.py
 ```
-2. Evaluate the extraction against Ground Truth
+2. Extract Knowledge Graph from raw text (Costs OpenAI API credits)
 ```
-uv run python scripts/2_evaluate_extraction.py
+uv run python scripts/01_extract_kg.py 
 ```
 3. Generate synthetic Q&A pairs for RAG evaluation
 ```
-uv run python scripts/3_generate_qa.py
+uv run python scripts/02_generate_qa.py
 ```
-4. Evaluate the RAG pipeline (Hit@K, MRR)
+4. Evaluate the retrieval step against Ground Truth (Hit@K, MRR)
 ```
-uv run python scripts/4_evaluate_rag.py
+uv run python scripts/04_evaluate_retrieval.py
 ```
 
 ### Step 5: Run the Web Application
@@ -115,11 +113,30 @@ uv run uvicorn app:app --reload --port 8000
 ```
 Chat UI will be available at `http://localhost:8000`
 
+## ⚙️ Using the Makefile (Alternative)
+
+For convenience, this project includes a `Makefile` and a `run_deployment.sh` script to automate environment setup, linting, and deployment.
+
+To start of from the scratch, 
+- first uncomment lines 13-16 in `run_deployment.sh` file.
+- then use make as follows:
+```bash
+make run
+```
+
+#### Makefile Commands
+- `make install`: Installs Python dependencies using uv.
+- `make up-db`: Starts the Docker containers for Postgres, pgAdmin, and Grafana.
+- `make pipeline`: Runs the 4 offline scripts sequentially to extract and evaluate the KG.
+- `make run`: Executes `run_deployment.sh` (starts Docker, waits, runs pipeline, starts FastAPI).
+- `make lint / make format`: Runs ruff to ensure code quality.
+
+
 ## 📊 Monitoring & Evaluation
 
 This project separates **Offline Evaluation** from **Online Inference**.
 
-- **Offline Metrics:** Stored in the `evaluations` and `rag_evaluations` tables. Track Extraction F1, Retrieval Hit@K.
+- **Offline Metrics:** Stored in the `extraction_evals` and `rag_evaluations` tables. Track Extraction F1, Retrieval Hit@K.
 - **Online Traces:** Every user interaction in the Web UI is logged to the `production_traces` table, capturing cost, latency, and user feedback (thumbs up/down).
 
 To visualize these metrics, connect Grafana (included in the Docker Compose file) to your PostgreSQL database at `http://localhost:3000`.
@@ -133,7 +150,7 @@ To visualize these metrics, connect Grafana (included in the Docker Compose file
 | API Framework | FastAPI, Uvicorn |
 | Database | PostgreSQL, `pgvector`, `pg_trgm` |
 | DB Driver | `psycopg` (v3), `psycopg-pool` |
-| LLMs | OpenAI (`gpt-4o-mini`, `text-embedding-3-small`) |
+| LLMs | OpenAI (`gpt-5.6-luna`, `nomic-ai/nomic-embed-text-v1.5`) |
 | Data Validation | Pydantic |
 | Package Manager | `uv` |
 | Infrastructure | Docker, Docker Compose |

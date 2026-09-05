@@ -18,6 +18,7 @@ dependencies = [
     "pyarrow>=25.0.0",
     "pydantic>=2.13.4",
     "python-dotenv>=1.2.2",
+    "ruff>=0.16.6",
     "sentence-transformers>=5.6.1",
     "uvicorn>=0.52.4",
 ]
