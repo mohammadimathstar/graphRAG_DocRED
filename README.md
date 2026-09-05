@@ -91,6 +91,7 @@ docker compose up -d
 ```
 - **pgAdmin** will be available at `http://localhost:5050`
 - **PostgreSQL** will be available at localhost:5433
+![pgAdmin](pics/pgadmin.png)
 
 ### Step 3: Install Python Dependencies
 Use `uv` to sync your local virtual environment:
@@ -123,6 +124,8 @@ Start the FastAPI server locally:
 uv run uvicorn app:app --reload --port 8000
 ```
 Chat UI will be available at `http://localhost:8000`
+![FastAPI](pics/fastai.png)
+
 
 ## ⚙️ Using the Makefile (Alternative)
 

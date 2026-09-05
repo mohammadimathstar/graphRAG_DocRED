@@ -1,8 +1,8 @@
-.PHONY: install test lint format clean up-db down-db pipeline run
+.PHONY: install lint format clean up-db down-db pipeline run
 
 # Install dependencies
 install:
-    uv sync
+	uv sync
 
 # Run unit tests
 # test:
@@ -27,20 +27,20 @@ clean:
 
 # Start Docker containers (Postgres, pgAdmin, Grafana)
 up-db:
-    docker compose up -d
+	docker compose up -d
 
 # Stop Docker containers
 down-db:
-    docker compose down
+	docker compose down
 
 # Run the offline data pipeline (Extract, Evaluate, Generate QA)
 pipeline:
 	uv run python scripts/00_extract_data.py
-    uv run python scripts/01_extract_kg.py
+	uv run python scripts/01_extract_kg.py
 	uv run python scripts/02_generate_qa.py
-    uv run python scripts/04_evaluate_retrieval.py
+	uv run python scripts/04_evaluate_retrieval.py
 
 # Run the deployment script (Starts DB, runs pipeline, starts API)
 run:
-    chmod +x run_deployment.sh
-    ./run_deployment.sh
+	chmod +x run_deployment.sh
+	./run_deployment.sh
