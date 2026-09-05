@@ -20,8 +20,6 @@ flowchart TD
     B --> C{Strategy?}
     C -->|GRAPH| D[Graph Retriever<br/>SQL + pg_trgm]
     C -->|VECTOR| E[Vector Retriever<br/>pgvector ANN]
-    C -->|HYBRID| D
-    C -->|HYBRID| E
     D --> F[Context Fusion]
     E --> F
     F --> G[Generator LLM]
