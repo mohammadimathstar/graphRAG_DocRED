@@ -2,6 +2,7 @@ from psycopg import Connection
 from tqdm import tqdm
 import re
 import string
+from typing import Any
 
 from src.retrieval.retrieval import retrieve_context
 from src.extraction.extractor import InformationExtractor
@@ -48,22 +49,17 @@ def get_evaluation_set(conn: Connection) -> list[dict]:
 
 
 def evaluate_retrieval(
-    conn: Connection, router: InformationExtractor, qa: list[dict]
+    result: Any, qa: list[dict]
 ) -> dict:
-    qa_id = qa["qa_id"]
-    question = qa["question"]
+    
     gold_chunk_norm = normalize_text(qa["gold_chunk_text"])
     gold_entity_norm = normalize_text(qa["gold_entity"])
 
     # 1. Retrieve context
-    result = retrieve_context(conn, router, question)
-    strategy = result["strategy"]
     retrieved_list = result["context"]
 
     if not retrieved_list:
         return {
-            "qa_id": qa_id,
-            "retrieval_method": None,
             "hit_at_k": False,
             "hit_at_1": False,  # Top 1 retrieval
             "hit_at_3": False,  # Top 3 retrieval
@@ -104,8 +100,6 @@ def evaluate_retrieval(
         reciprocal_rank = 0.0  # Not found, adds 0 to MRR
 
     return {
-        "qa_id": qa_id,
-        "retrieval_method": strategy,
         "hit_at_k": hit_k,
         "hit_at_1": hit_1,  # Top 1 retrieval
         "hit_at_3": hit_3,  # Top 3 retrieval

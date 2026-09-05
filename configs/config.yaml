@@ -17,3 +17,8 @@ extraction:
 
 retrieval:
   instruction_version: 'query-prompt-v1'
+
+
+judgement:
+  instruction_version: 'judgement-prompt-v1'
+  model: 'gpt-5.6-luna'

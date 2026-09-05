@@ -172,4 +172,7 @@ class RAGBase:
             session_id=session_id,
         )
 
-        return {"answer": answer, "trace_id": trace_id}
+        return {
+            "answer": answer, 
+            "trace_id": trace_id,
+        }

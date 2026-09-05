@@ -289,12 +289,13 @@ def insert_rag_evaluation(
                     qa_id, -- run_id
                     retrieval_method, generator_model, entity_resolved, 
                     hit_at_k, hit_at_1, hit_at_3,
-                    mrr, retrieved_context
+                    mrr, retrieved_context, generated_answer
                 ) VALUES (
                     %s, %s, %s,
                     %s, %s, %s, %s,
-                    %s, %s
-                );
+                    %s, %s, %s
+                )
+                RETURNING id
             """,
                 (
                     metrics["qa_id"],
@@ -306,12 +307,28 @@ def insert_rag_evaluation(
                     metrics["hit_at_3"],
                     metrics["mrr"],
                     metrics["retrieved_context"],
+                    metrics["generated_answer"],
                 ),
             )
         except Exception as e:
             print(f"SQL Error during inserting evaluation of QA: {e}")
             conn.rollback()
 
+        eval_id = cursor.fetchone()[0]
+        return eval_id  # Return the evaluation ID for further updates (like judge results)
+
+def update_rag_evaluation_judgment(
+    conn: Connection, 
+    evaluation_id: str, 
+    is_correct: bool, 
+    explanation: str
+):
+    with conn.cursor() as cur:
+        cur.execute("""
+            UPDATE rag_evaluations 
+            SET judge_is_correct = %s, judge_explanation = %s 
+            WHERE id = %s;
+        """, (is_correct, explanation, evaluation_id))
 
 def log_production_trace(
     user_question: str,

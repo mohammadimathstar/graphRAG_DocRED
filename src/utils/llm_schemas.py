@@ -173,3 +173,16 @@ class QuestionList(BaseModel):
 class RouterDecision(BaseModel):
     strategy: Literal["GRAPH", "VECTOR"]
     entities: List[str] = Field(default_factory=list, description="Entity names")
+
+
+# **************************************
+#     Output of LLM as a JUDGE
+# **************************************
+
+class OfflineJudgeResult(BaseModel):
+    is_correct: bool = Field(..., description="True if the generated answer correctly answers the question based on the ground truth and gold chunk.")
+    explanation: str = Field(..., description="A brief 1-sentence explanation of why the answer is correct or incorrect.")
+
+class OnlineJudgeResult(BaseModel):
+    relevancy: Literal["RELEVANT", "PARTIALLY_RELEVANT", "NON_RELEVANT"]
+    explanation: str = Field(..., description="A brief 1-sentence explanation of the rating.")

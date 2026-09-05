@@ -158,8 +158,13 @@ CREATE TABLE IF NOT EXISTS rag_evaluations (
     hit_at_3 BOOLEAN,            -- Was the gold chunk in the top 3?
     mrr NUMERIC(10, 4),          -- Reciprocal rank for this specific question (1.0, 0.5, 0.0)
     
+    -- LLM-as-a-Judge (Synthetic QA)
+    judge_is_correct BOOLEAN,     -- True if generated answer matches ground truth
+    judge_explanation TEXT,       -- Why it was correct/incorrect
+    
     -- Debugging / Error Analysis payloads
-    retrieved_context TEXT[]    -- What did the graph actually return?
+    retrieved_context TEXT[],    -- What did the graph actually return?
+    generated_answer TEXT
 );
 """
 
