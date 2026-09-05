@@ -23,6 +23,7 @@ with open("configs/config.yaml", "r") as f:
 def run_evaluate_retrieval(run_id: str = None):
         
     llm_rag = config["llm"]["model"]
+    llm_judge = config["judgement"]["model"]
 
     # ==========================================
     # 1. Setup DB & Run
@@ -81,6 +82,7 @@ def run_evaluate_retrieval(run_id: str = None):
             update_rag_evaluation_judgment(
                 conn=conn,
                 evaluation_id=eval_id,
+                judge_model=llm_judge,
                 is_correct=judge_result.is_correct,
                 explanation=judge_result.explanation
             )

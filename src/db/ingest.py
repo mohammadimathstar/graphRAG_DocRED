@@ -320,15 +320,16 @@ def insert_rag_evaluation(
 def update_rag_evaluation_judgment(
     conn: Connection, 
     evaluation_id: str, 
+    judge_model: str,
     is_correct: bool, 
     explanation: str
 ):
     with conn.cursor() as cur:
         cur.execute("""
             UPDATE rag_evaluations 
-            SET judge_is_correct = %s, judge_explanation = %s 
+            SET judge_is_correct = %s, judge_explanation = %s, judge_model = %s 
             WHERE id = %s;
-        """, (is_correct, explanation, evaluation_id))
+        """, (is_correct, explanation, judge_model, evaluation_id))
 
 def log_production_trace(
     user_question: str,
