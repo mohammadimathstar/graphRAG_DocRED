@@ -30,6 +30,7 @@ flowchart TD
 ```
 project_root/
 ├── app.py                     # FastAPI Web Server & UI endpoints
+├── configs/                    # Configuration
 ├── static/                    # HTML/CSS/JS for the Chat Interface
 ├── src/
 │   ├── db/                    # Database connection, schema, and ingestion logic
