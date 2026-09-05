@@ -14,8 +14,20 @@ Built entirely with Python, FastAPI, PostgreSQL (+ pgvector), and Docker.
 - **Fully Containerized:** Docker Compose setup for PostgreSQL, pgAdmin, and Grafana.
 
 ## 🏗️ System Architecture
-```mermaid
-flowchart TD    A[User Query] --> B(LLM Query Router)    B --> C{Strategy?}    C -->|GRAPH| D[Graph Retriever<br/>SQL + pg_trgm]    C -->|VECTOR| E[Vector Retriever<br/>pgvector ANN]    C -->|HYBRID| D    C -->|HYBRID| E    D --> F[Context Fusion]    E --> F    F --> G[Generator LLM]    G --> H[Final Answer]
+```mermaid```mermaid
+flowchart TD
+    A[User Query] --> B(LLM Query Router)
+    B --> C{Strategy?}
+    C -->|GRAPH| D[Graph Retriever<br/>SQL + pg_trgm]
+    C -->|VECTOR| E[Vector Retriever<br/>pgvector ANN]
+    C -->|HYBRID| D
+    C -->|HYBRID| E
+    D --> F[Context Fusion]
+    E --> F
+    F --> G[Generator LLM]
+    G --> H[Final Answer]
+```
+
 ```
 
 ## 📂 Project Structure
