@@ -1,14 +1,14 @@
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import OpenAI
 from src.rag.rags import RAGBase
-# from src.db.connection import get_conn_from_pool, release_conn
+from src.evaluation.judge import run_online_judgment
 from src.db.manager import init_db
-from src.db.ingest import update_trace_feedback
+from src.db.ingest import update_trace_feedback, update_trace_judgment
 import os
 from pathlib import Path
 
@@ -89,7 +89,7 @@ def get_ui():
 
 
 @app.post("/ask", response_model=QueryResponse)
-def ask_question(request: QueryRequest):
+def ask_question(request: QueryRequest, background_tasks: BackgroundTasks):
     """Handles a user question and returns a RAG-generated answer."""
 
     # Access the RAG system from the app state
@@ -103,11 +103,19 @@ def ask_question(request: QueryRequest):
             query=request.question, 
             session_id=request.session_id
         )
+        answer = response["answer"]
+        trace_id = response["trace_id"]
         
-        return QueryResponse(answer=response['answer'], trace_id=response['trace_id'])
-        
+        # 2. Add Judge to Background Task (User doesn't wait for this!)
+        if trace_id:
+            background_tasks.add_task(
+                run_online_judgment,
+                trace_id=trace_id,
+                question=request.question,
+                answer=answer
+            )        
+        return QueryResponse(answer=answer, trace_id=trace_id)        
     except Exception as e:
-        # If something catastrophic happens, return a 500 error
         raise HTTPException(status_code=500, detail=str(e))
         
 @app.post("/feedback")
@@ -122,6 +130,8 @@ def submit_feedback(request: FeedbackRequest):
         return {"status": "success"}
     except Exception as e:
         raise HTTPException(status_code=500, detail="Failed to save feedback")
+
+
 
 # To run this: 
 # uvicorn app:app --reload --port 8000

@@ -426,3 +426,21 @@ def update_trace_feedback(trace_id: str, thumbs_up: bool, user_feedback: str):
         conn.rollback()
     finally:
         release_conn(conn)
+
+def update_trace_judgment(trace_id: str, model: str, relevancy: str, explanation: str):
+    """Updates a production trace with judge evaluation. Uses its own connection."""
+    
+    conn = get_conn_from_pool()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("""
+                UPDATE production_traces 
+                SET judge_relevancy = %s, judge_explanation = %s, judge_model = %s
+                WHERE trace_id = %s;
+            """, (relevancy, explanation, model, trace_id))
+        conn.commit()
+    except Exception as e:
+        print(f"Error updating trace judgment: {e}")
+        conn.rollback()
+    finally:
+        release_conn(conn)

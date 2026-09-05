@@ -202,6 +202,11 @@ CREATE TABLE IF NOT EXISTS production_traces (
     -- System Health
     status TEXT,                       -- 'success', 'failed_retrieval', 'failed_generation', 'rate_limited'
     error_message TEXT,
+
+    -- LLM-as-a-Judge for User Questions
+    judge_relevancy TEXT,        -- 'RELEVANT', 'PARTIALLY_RELEVANT', 'NON_RELEVANT'
+    judge_explanation TEXT,
+    judge_model TEXT,
     
     -- Feedback (Optional, for RLHF later)
     thumbs_up BOOLEAN,

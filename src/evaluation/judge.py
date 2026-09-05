@@ -6,7 +6,7 @@ import yaml
 
 from src.utils.llm_schemas import OfflineJudgeResult
 from src.evaluation.judge_prompt import build_messages
-
+from src.db.ingest import update_trace_judgment
 from src.utils.llm_schemas import OfflineJudgeResult, OnlineJudgeResult
 
 
@@ -57,3 +57,17 @@ Your task is to evaluate if the 'Generated Answer' is relevant to the 'Question'
         ],
     )
     return response.choices[0].message.parsed
+
+
+def run_online_judgment(trace_id: str, question: str, answer: str):
+    """This runs in the background after the user has received their answer."""
+    try:
+        judge_result = judge_online_question(question, answer)
+        update_trace_judgment(
+            trace_id=trace_id,
+            model=config["judgement"]["model"],
+            relevancy=judge_result.relevancy,
+            explanation=judge_result.explanation
+        )
+    except Exception as e:
+        print(f"Background Judge failed for trace {trace_id}: {e}")
