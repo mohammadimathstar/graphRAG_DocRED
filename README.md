@@ -30,7 +30,7 @@ flowchart TD
 ```
 project_root/
 ├── app.py                     # FastAPI Web Server & UI endpoints
-├── configs/                    # Configuration
+├── configs/                   # Configuration
 ├── static/                    # HTML/CSS/JS for the Chat Interface
 ├── src/
 │   ├── db/                    # Database connection, schema, and ingestion logic
@@ -42,7 +42,7 @@ project_root/
 ├── scripts/                   # Offline pipeline orchestrators (1_extract, 2_eval, etc.)
 ├── docker-compose.yml         # Orchestrates Postgres, pgAdmin, Grafana
 ├── pyproject.toml             # Python dependencies (managed by uv)
-└── .env.example                       # Environment variables
+└── .env.example               # Environment variables
 ```
 
 ## 🏛️ Architecture & Design Decisions
