@@ -34,12 +34,14 @@ project_root/
 ├── src/
 │   ├── db/                    # Database connection, schema, and ingestion logic
 │   ├── extraction/            # LLM extractors and Pydantic schemas
-│   ├── rag/                   # RAGBase class, retrieval routing, and prompt building
-│   └── evaluation/            # IE metrics (P/R/F1) and RAG metrics (RAGAS)
+│   ├── retrieval/             # Retrieval routing and the implementation of retrieval
+│   ├── utils/                 
+│   ├── rag/                   # RAGBase class
+│   └── evaluation/            # Generate QA and IE metrics 
 ├── scripts/                   # Offline pipeline orchestrators (1_extract, 2_eval, etc.)
 ├── docker-compose.yml         # Orchestrates Postgres, pgAdmin, Grafana
 ├── pyproject.toml             # Python dependencies (managed by uv)
-└── .env                       # Environment variables
+└── .env.example                       # Environment variables
 ```
 
 ## 🏛️ Architecture & Design Decisions
