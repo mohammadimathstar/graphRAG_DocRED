@@ -9,8 +9,12 @@ Built entirely with Python, FastAPI, PostgreSQL (+ pgvector), and Docker.
 - **Hybrid Agentic Retrieval:** Routes queries to Graph Traversal (for entity-specific facts) or Vector Search (for thematic summaries) automatically.
 - **Strict Schema Validation:** Uses Pydantic to enforce a closed entity/relation ontology during LLM extraction, preventing hallucinated schemas.
 - **Soft Validation Engine:** Flags invalid triples (e.g., domain/range type mismatches, missing evidence) without crashing the extraction pipeline.
-- **Comprehensive Evaluation Suite:** Evaluates both Information Extraction (P/R/F1 against DocRED)and retrieval performance(Hit@K, MRR against synthetic QA dataset).
+- **Comprehensive Evaluation Suite**:
+    - **Information Extraction**: P/R/F1 against DocRED ground truth.
+    - **Retrieval**: Hit@1, Hit@3, MRR, and Context Precision.
+    - **Generation (LLM-as-a-Judge)**: Uses a Pydantic-enforced Judge LLM to evaluate semantic correctness (offline) and relevancy (online).
 - **Production-Ready API:** FastAPI backend with connection pooling, graceful error handling, and a built-in Web UI for chat and feedback collection.
+- **Asynchronous Monitoring**: User questions are evaluated in the background, ensuring users get instant responses while quality metrics are logged asynchronously.
 - **Fully Containerized:** Docker Compose setup for PostgreSQL, pgAdmin, and Grafana.
 
 ## 🏗️ System Architecture
@@ -48,7 +52,11 @@ project_root/
 ## 🏛️ Architecture & Design Decisions
 1. **Hybrid Agentic RAG vs Standard RAG:** Standard RAG relies solely on vector similarity search, which fails on multi-hop questions. We use an LLM-based Query Router. If the query contains specific entities, it routes to the Graph Retriever. If thematic, it routes to the Vector Retriever.
 2. **Strict vs Soft Validation:** We enforce strict Pydantic schemas for JSON structure and referential integrity. Semantic constraints (e.g., a `place of birth` relation must map a `Person` to a `Place`) are checked via a Soft Validator that flags invalid triples as `valid=False` in the database without crashing the pipeline.
-3. **Separation of Offline vs Online:** The `scripts/` folder handles batch extraction/evaluation. The `app.py` server is stateless and only reads from the graph to generate answers.
+3. **LLM-as-a-Judge (Generation Evaluation):** Because standard string matching fails to capture semantic correctness, we use a Judge LLM to evaluate generated answers:
+    - For offline synthetic QA, it returns `is_correct` (boolean). 
+    - For online user questions, it returns `RELEVANT/PARTIALLY_RELEVANT/NON_RELEVANT`.
+4. **Asynchronous Production Monitoring:** To prevent evaluation latency from slowing down user experience, the Judge LLM is executed via FastAPI's BackgroundTasks. The user receives their answer instantly, and the production_traces table is updated asynchronously a few seconds later.
+5. **Separation of Offline vs Online:** The `scripts/` folder handles batch extraction/evaluation. The `app.py` server is stateless and only reads from the graph to generate answers.
 
 ## 🚀 Quick Start (Local Development)
 ### Prerequisites
@@ -155,8 +163,15 @@ make run
 
 This project separates **Offline Evaluation** from **Online Inference**.
 
-- **Offline Metrics:** Stored in the `extraction_evals` and `rag_evaluations` tables. Track Extraction Precision/Recall/F1, Retrieval Hit@K/MRR.
-- **Online Traces:** Every user interaction in the Web UI is logged to the `production_traces` table, capturing cost, latency, and user feedback (thumbs up/down).
+- **Offline Metrics (`rag_evaluations` table):** 
+    - Runs on a synthetic Q&A dataset generated from Ground Truth.
+    - Tracks Extraction (P/R/F1) and Retrieval metrics (Hit@K, MRR).
+    - LLM-as-a-Judge: Evaluates if the generated answer semantically matches the ground truth (`judge_is_correct`) and logs an explanation.
+
+- **Online Traces (`production_traces` table):** 
+    - Every user interaction in the Web UI is logged, capturing cost, latency, and user feedback (thumbs up/down).
+    - **Async LLM-as-a-Judge:** Runs in the background after the user receives their answer, rating the response relevancy (`judge_relevancy`) to monitor real-world quality over time.
+
 
 To visualize these metrics, connect Grafana (included in the Docker Compose file) to your PostgreSQL database at `http://localhost:3000`.
 
